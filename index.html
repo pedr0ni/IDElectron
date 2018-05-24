@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>IDElectron</title>
+	<style type="text/css">
+		html,
+		body {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="container" style="width: 100%; height: 100%;"></div>
+
+	<script>
+		var nodeRequire = global.require;
+	</script>
+	<script src="node_modules/monaco-editor/min/vs/loader.js"></script>
+	<script>
+		
+		var amdRequire = global.require;
+		global.require = nodeRequire;
+		var path = require('path');
+		function uriFromPath(_path) {
+			var pathName = path.resolve(_path).replace(/\\/g, '/');
+			if (pathName.length > 0 && pathName.charAt(0) !== '/') {
+				pathName = '/' + pathName;
+			}
+			return encodeURI('file://' + pathName);
+		}
+		amdRequire.config({
+			baseUrl: uriFromPath(path.join(__dirname, 'node_modules/monaco-editor/min'))
+		});
+
+		self.module = undefined;
+		self.process.browser = true;
+	</script>
+
+	<script>
+		require('./dist/renderer.js')
+	</script>
+</body>
+
+</html>
