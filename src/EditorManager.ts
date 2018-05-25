@@ -8,23 +8,26 @@ const dialog = remote.dialog;
 
 export class EditorManager {
 
-    _editor: monaco.editor.IStandaloneCodeEditor;
-    _app: electron.App;
-    _currentFile: string;
-    _desktopPath: string;
+    private _editor: monaco.editor.IStandaloneCodeEditor;
+    private _app: electron.App;
+    private _currentWindow: electron.BrowserWindow;
+    public _currentFilePath: string;
+    private _desktopPath: string;
 
-    constructor(_app: electron.App, _editor: monaco.editor.IStandaloneCodeEditor) {
+    constructor(_app: electron.App, _currentWindow: electron.BrowserWindow, _editor: monaco.editor.IStandaloneCodeEditor) {
         this._editor = _editor;
         this._app = _app;
+        this._currentWindow = _currentWindow;
         this._desktopPath = path.resolve(_app.getPath('desktop'));
     }
 
-    resetTemplate() {
+    public resetTemplate(): void {
         this._editor.setValue("#include <stdio.h>\n#include <stdlib.h>\n \nint main() {\n\n\n    \n    return 0;\n}");
         this._editor.setPosition({column: 4, lineNumber: 6});
+        this._currentFilePath = null;
     }
 
-    getTemplate() {
+    public getTemplate(): Array<any> {
         
         let template: Array<any>;
         let _this = this;
@@ -50,7 +53,8 @@ export class EditorManager {
                             fs.readFile(path[0], 'utf-8', (err, data) => {
                                 if (err) throw err;
                                 _this._editor.setValue(data);
-                                _this._currentFile = path[0];
+                                _this._currentFilePath = path[0];
+                                _this.updateWindowTitle();
                             });
                         }
                     },
@@ -71,11 +75,14 @@ export class EditorManager {
                     {
                         label: 'Salvar',
                         click() {
-                            _this.saveFile();
+                            _this.saveFile(false);
                         }
                     },
                     {
-                        label: 'Salvar como'
+                        label: 'Salvar como',
+                        click() {
+                            _this.saveFile(true);
+                        }
                     }
                 ]
             },
@@ -98,20 +105,27 @@ export class EditorManager {
         return template;
     }
 
-    saveFile() {
+    public saveFile(as: boolean): void {
 
-        if (this._currentFile == null) {
-            //Abrir dialog
-            let path = dialog.showSaveDialog({
-               defaultPath: this._desktopPath
+        if (this._currentFilePath == null || as) {
+
+            this._currentFilePath = dialog.showSaveDialog({
+               defaultPath: this._desktopPath,
+               filters: [
+                    { name: 'Linguagem C', extensions: ['c'] }
+                ]
             });
-
-            console.log(path[0]);
+            
         }
+
+        fs.writeFile(this._currentFilePath, this._editor.getValue(), (err) => {
+            if (err) throw err;
+            
+        });
     }
 
-    forceSave() {
-
+    public updateWindowTitle(): void {
+        this._currentWindow.setTitle("IDElectron - " + this._currentFilePath);
     }
 
 }

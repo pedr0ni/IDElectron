@@ -29,7 +29,7 @@ function onModuleLoaded() {
         theme: "vs-dark"
     });
 
-    editorManager = new EditorManager(remote.app, editor);
+    editorManager = new EditorManager(remote.app, currentWindow, editor);
     currentWindow.setMenu(Menu.buildFromTemplate(editorManager.getTemplate()));
     currentWindow.show();
 
