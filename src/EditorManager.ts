@@ -204,7 +204,7 @@ export class EditorManager {
             path = "Novo Arquivo";
         }
         if (this._cloudManager.isServer()) {
-            this._currentWindow.setTitle("IDElectron - " + path + " - Sessão IDECloud (Servidor)");
+            this._currentWindow.setTitle("IDElectron - " + path + " - Sessão IDECloud (Servidor ["+this._cloudManager.getClientList().length+" clientes])");
         } else if (this._cloudManager.isClient()) {
             this._currentWindow.setTitle("IDElectron - " + path + " - Sessão IDECloud (Cliente)");
         } else {
