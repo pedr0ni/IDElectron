@@ -2,6 +2,8 @@
 
 Cross-platform real-time Intense Development Environment
 
+![alt text](https://github.com/pedr0ni/IDElectron/blob/master/assets/demo.gif "Demo 0.0.1 Alpha")
+
 ## Iniciando
 
 O objetivo desta IDE é ajudar na edição de código em tempo real, futuramente adicionando o IntelliSense feito a base de redes neurais.
