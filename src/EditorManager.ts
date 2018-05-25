@@ -2,7 +2,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as electron from 'electron';
-import {remote} from 'electron';
+import { remote } from 'electron';
+import { CloudManager } from './CloudManager';
 
 const dialog = remote.dialog;
 
@@ -13,6 +14,7 @@ export class EditorManager {
     private _currentWindow: electron.BrowserWindow;
     public _currentFilePath: string;
     private _desktopPath: string;
+    private _cloudManager: CloudManager;
 
     constructor(_app: electron.App, _currentWindow: electron.BrowserWindow, _editor: monaco.editor.IStandaloneCodeEditor) {
         this._editor = _editor;
@@ -87,6 +89,17 @@ export class EditorManager {
                 ]
             },
             {
+                label: 'Nuvem',
+                submenu: [
+                    {
+                        label: 'Conectar',
+                        click() {
+
+                        }
+                    }
+                ]
+            },
+            {
                 label: 'Desenvolvedores',
                 submenu: [
                     {role: 'reload'},
@@ -118,9 +131,17 @@ export class EditorManager {
             
         }
 
+        let _this = this;
         fs.writeFile(this._currentFilePath, this._editor.getValue(), (err) => {
-            if (err) throw err;
-            
+            if (err) {
+                dialog.showMessageBox(_this._currentWindow, {
+                    type: 'error',
+                    message: 'Ocorreu um erro ao salvar o arquivo.',
+                    title: 'IDElectron'
+                });
+                throw err;
+            }
+            //File saved :)
         });
     }
 
