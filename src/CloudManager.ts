@@ -37,6 +37,7 @@ export class CloudManager {
             
             _this._server.listen(4044);
             _this._isserver = true;
+            _this._editorManager.updateWindowTitle();
 
             //Send code updates to clients
             setInterval(() => {
@@ -67,6 +68,7 @@ export class CloudManager {
         this._client.on('connect', () => {
             _this._editorManager.showDialog('info', 'Você se conectou em uma sessão IDECloud.');
             _this._isclient = true;
+            _this._editorManager.updateWindowTitle();
         });
 
         //Server disconnected

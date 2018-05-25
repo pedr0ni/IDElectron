@@ -107,7 +107,6 @@ export class EditorManager {
                             }
                             _this._cloudManager.listen();
                             _this.showDialog('info', 'Você iniciou uma sessão no IDECloud :)');
-                            _this.updateWindowTitle();
                         }
                     },
                     {
@@ -200,12 +199,16 @@ export class EditorManager {
     }
 
     public updateWindowTitle(): void {
+        let path: string;
+        if (this._currentFilePath == null) {
+            path = "Novo Arquivo";
+        }
         if (this._cloudManager.isServer()) {
-            this._currentWindow.setTitle("IDElectron - " + this._currentFilePath + " - Sessão IDECloud (Servidor)");
+            this._currentWindow.setTitle("IDElectron - " + path + " - Sessão IDECloud (Servidor)");
         } else if (this._cloudManager.isClient()) {
-            this._currentWindow.setTitle("IDElectron - " + this._currentFilePath + " - Sessão IDECloud (Cliente)");
+            this._currentWindow.setTitle("IDElectron - " + path + " - Sessão IDECloud (Cliente)");
         } else {
-            this._currentWindow.setTitle("IDElectron - " + this._currentFilePath);
+            this._currentWindow.setTitle("IDElectron - " + path);
         }
         
     }
