@@ -14,7 +14,7 @@ app.on('window-all-closed', function () {
 
 app.on('ready', function () {
 
-	mainWindow = new BrowserWindow({ width: 1280, height: 720, icon: path.join(__dirname, '../assets/icon.png'), show: false });
+	mainWindow = new BrowserWindow({ width: 1280, height: 720, icon: path.join(__dirname, '../assets/icon.png'), show: true });
 
 	mainWindow.loadURL(url.format({
 		pathname: path.join(__dirname, "../index.html"),

@@ -30,8 +30,10 @@ function onModuleLoaded() {
     });
 
     editorManager = new EditorManager(remote.app, currentWindow, editor);
-    currentWindow.setMenu(Menu.buildFromTemplate(editorManager.getTemplate()));
+    let appMenu = Menu.buildFromTemplate(editorManager.getTemplate());
+    currentWindow.setMenu(appMenu);
     currentWindow.show();
+    editorManager._currentMenu = appMenu;
 
     globalShortcut.register('CommandOrControl+N', () => {
         editorManager.resetTemplate();

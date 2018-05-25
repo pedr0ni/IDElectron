@@ -15,12 +15,14 @@ export class EditorManager {
     public _currentFilePath: string;
     private _desktopPath: string;
     private _cloudManager: CloudManager;
+    public _currentMenu: electron.Menu;
 
     constructor(_app: electron.App, _currentWindow: electron.BrowserWindow, _editor: monaco.editor.IStandaloneCodeEditor) {
         this._editor = _editor;
         this._app = _app;
         this._currentWindow = _currentWindow;
         this._desktopPath = path.resolve(_app.getPath('desktop'));
+        this._cloudManager = new CloudManager(this);
     }
 
     public resetTemplate(): void {
@@ -89,12 +91,49 @@ export class EditorManager {
                 ]
             },
             {
-                label: 'Nuvem',
+                id: 'teste',
+                label: 'IDECloud',
                 submenu: [
                     {
-                        label: 'Conectar',
+                        label: 'Iniciar Sessão',
+                        click() {
+                            if (_this._cloudManager.isOnline()) {
+                                _this.showDialog('error', 'Você já está em uma sessão da IDECloud.');
+                                return;
+                            }
+                            _this._cloudManager.listen();
+                            _this.showDialog('info', 'Você iniciou uma sessão no IDECloud :)');
+                        }
+                    },
+                    {
+                        label: 'Encerrar Sessão',
+                        click() {
+                            if (!_this._cloudManager.isOnline()) {
+                                _this.showDialog('error', 'Você não iniciou uma sessão do IDECloud.');
+                                return;
+                            }
+                            _this._cloudManager.close();
+                            _this.showDialog('warning', 'Sua sessão no IDECloud foi encerrada.');
+                        }
+                    },
+                    {type: 'separator'},
+                    {
+                        label: 'Entrar na Sessão',
+                        click() {
+                            _this._cloudManager.connect();
+                        }
+                    },
+                    {
+                        label: 'Sair da Sessão',
                         click() {
 
+                        }
+                    },
+                    {type: 'separator'},
+                    {
+                        label: 'Status da Sessão',
+                        click() {
+                            
                         }
                     }
                 ]
@@ -134,11 +173,7 @@ export class EditorManager {
         let _this = this;
         fs.writeFile(this._currentFilePath, this._editor.getValue(), (err) => {
             if (err) {
-                dialog.showMessageBox(_this._currentWindow, {
-                    type: 'error',
-                    message: 'Ocorreu um erro ao salvar o arquivo.',
-                    title: 'IDElectron'
-                });
+                _this.showDialog('error', 'Ocorreu um erro ao salvar o arquivo.');
                 throw err;
             }
             //File saved :)
@@ -147,6 +182,22 @@ export class EditorManager {
 
     public updateWindowTitle(): void {
         this._currentWindow.setTitle("IDElectron - " + this._currentFilePath);
+    }
+
+    private showDialog(_type: string, _message: string):void {
+        dialog.showMessageBox(this._currentWindow, {
+            type: _type,
+            message: _message,
+            title: 'IDElectron - IDECloud'
+        });
+    }
+
+    public getMonaco():monaco.editor.IStandaloneCodeEditor {
+        return this._editor;
+    }
+
+    public getApp():electron.App {
+        return this._app;
     }
 
 }
