@@ -97,35 +97,54 @@ export class EditorManager {
                     {
                         label: 'Iniciar Sessão',
                         click() {
-                            if (_this._cloudManager.isOnline()) {
+                            if (_this._cloudManager.isClient()) {
+                                _this.showDialog('error', 'VOcê já é cliente de uma sessão. Saia para hostear uma sessão IDECloud.');
+                                return;
+                            }
+                            if (_this._cloudManager.isServer()) {
                                 _this.showDialog('error', 'Você já está em uma sessão da IDECloud.');
                                 return;
                             }
                             _this._cloudManager.listen();
                             _this.showDialog('info', 'Você iniciou uma sessão no IDECloud :)');
+                            _this.updateWindowTitle();
                         }
                     },
                     {
                         label: 'Encerrar Sessão',
                         click() {
-                            if (!_this._cloudManager.isOnline()) {
+                            if (!_this._cloudManager.isServer()) {
                                 _this.showDialog('error', 'Você não iniciou uma sessão do IDECloud.');
                                 return;
                             }
                             _this._cloudManager.close();
                             _this.showDialog('warning', 'Sua sessão no IDECloud foi encerrada.');
+                            _this.updateWindowTitle();
                         }
                     },
                     {type: 'separator'},
                     {
                         label: 'Entrar na Sessão',
                         click() {
+                            if (_this._cloudManager.isServer()) {
+                                _this.showDialog('error', 'Você já é o host de uma sessão. Saia para entrar em outra sessão IDECloud.');
+                                return;
+                            }
+                            if (_this._cloudManager.isClient()) {
+                                _this.showDialog('error', 'Você já está em uma sessão IDECloud.');
+                                return;
+                            }
                             _this._cloudManager.connect();
                         }
                     },
                     {
                         label: 'Sair da Sessão',
                         click() {
+                            if (!_this._cloudManager.isClient()) {
+                                _this.showDialog('error', 'Você não está em nenhuma sessão IDECloud.');
+                                return;
+                            }
+                            _this._cloudManager.disconnect();
 
                         }
                     },
@@ -181,10 +200,17 @@ export class EditorManager {
     }
 
     public updateWindowTitle(): void {
-        this._currentWindow.setTitle("IDElectron - " + this._currentFilePath);
+        if (this._cloudManager.isServer()) {
+            this._currentWindow.setTitle("IDElectron - " + this._currentFilePath + " - Sessão IDECloud (Servidor)");
+        } else if (this._cloudManager.isClient()) {
+            this._currentWindow.setTitle("IDElectron - " + this._currentFilePath + " - Sessão IDECloud (Cliente)");
+        } else {
+            this._currentWindow.setTitle("IDElectron - " + this._currentFilePath);
+        }
+        
     }
 
-    private showDialog(_type: string, _message: string):void {
+    public showDialog(_type: string, _message: string):void {
         dialog.showMessageBox(this._currentWindow, {
             type: _type,
             message: _message,
