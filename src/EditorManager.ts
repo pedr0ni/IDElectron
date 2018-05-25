@@ -1,17 +1,27 @@
 /// <reference path="../node_modules/monaco-editor/monaco.d.ts" />
 import * as fs from 'fs';
+import * as path from 'path';
 import * as electron from 'electron';
 import {remote} from 'electron';
 
 const dialog = remote.dialog;
 
-export class MenuManager {
+export class EditorManager {
 
     _editor: monaco.editor.IStandaloneCodeEditor;
-    _this = this;
+    _app: electron.App;
+    _currentFile: string;
+    _desktopPath: string;
 
-    constructor(_editor: monaco.editor.IStandaloneCodeEditor) {
+    constructor(_app: electron.App, _editor: monaco.editor.IStandaloneCodeEditor) {
         this._editor = _editor;
+        this._app = _app;
+        this._desktopPath = path.resolve(_app.getPath('desktop'));
+    }
+
+    resetTemplate() {
+        this._editor.setValue("#include <stdio.h>\n#include <stdlib.h>\n \nint main() {\n\n\n    \n    return 0;\n}");
+        this._editor.setPosition({column: 4, lineNumber: 6});
     }
 
     getTemplate() {
@@ -40,18 +50,29 @@ export class MenuManager {
                             fs.readFile(path[0], 'utf-8', (err, data) => {
                                 if (err) throw err;
                                 _this._editor.setValue(data);
+                                _this._currentFile = path[0];
                             });
                         }
                     },
                     {
                         label: 'Fechar',
                         click() {
-                            _this._editor.setValue("// Bem-vindo ao IDElectron");
+                            _this.resetTemplate();
+                        }
+                    },
+                    {
+                        label: 'Novo',
+                        accelerator: 'CmdOrCtrl+N',
+                        click() {
+                            _this.resetTemplate();
                         }
                     },
                     {type: 'separator'},
                     {
-                        label: 'Salvar'
+                        label: 'Salvar',
+                        click() {
+                            _this.saveFile();
+                        }
                     },
                     {
                         label: 'Salvar como'
@@ -75,6 +96,22 @@ export class MenuManager {
         ];
 
         return template;
+    }
+
+    saveFile() {
+
+        if (this._currentFile == null) {
+            //Abrir dialog
+            let path = dialog.showSaveDialog({
+               defaultPath: this._desktopPath
+            });
+
+            console.log(path[0]);
+        }
+    }
+
+    forceSave() {
+
     }
 
 }

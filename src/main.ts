@@ -4,13 +4,13 @@ import * as path from "path";
 import * as url from "url";
 
 var mainWindow: Electron.BrowserWindow = null;
+let loaderWindow: Electron.BrowserWindow;
 
 app.on('window-all-closed', function () {
 	if (process.platform != 'darwin') {
 		app.quit();
 	}
 });
-
 
 app.on('ready', function () {
 
@@ -24,5 +24,6 @@ app.on('ready', function () {
 
 	mainWindow.on('closed', function () {
 		mainWindow = null;
+		loaderWindow = null;
 	});
 });

@@ -1,18 +1,19 @@
 /// <reference path="../node_modules/monaco-editor/monaco.d.ts" />
 import * as electron from 'electron';
 import {remote} from 'electron';
-import {MenuManager} from './MenuManager';
+import {EditorManager} from './EditorManager';
 
 const app = remote.app;
 const BrowserWindow = remote.BrowserWindow;
 const dialog = remote.dialog;
 const currentWindow = remote.getCurrentWindow();
 const Menu = remote.Menu;
+const globalShortcut = remote.globalShortcut;
 
 
 declare var amdRequire: any;
 var editor: monaco.editor.IStandaloneCodeEditor;
-let menuManager: MenuManager;
+let editorManager: EditorManager;
 
 amdRequire(['vs/editor/editor.main'], () => {
     onModuleLoaded();
@@ -28,7 +29,11 @@ function onModuleLoaded() {
         theme: "vs-dark"
     });
 
-    menuManager = new MenuManager(editor);
-    currentWindow.setMenu(Menu.buildFromTemplate(menuManager.getTemplate()));
+    editorManager = new EditorManager(remote.app, editor);
+    currentWindow.setMenu(Menu.buildFromTemplate(editorManager.getTemplate()));
     currentWindow.show();
+
+    globalShortcut.register('CommandOrControl+N', () => {
+        editorManager.resetTemplate();
+    });
 }
