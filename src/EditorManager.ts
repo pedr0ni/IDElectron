@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as electron from 'electron';
 import { remote } from 'electron';
 import { CloudManager } from './CloudManager';
+import { ConfigManager } from "./ConfigManager";
 
 const dialog = remote.dialog;
 
@@ -16,6 +17,7 @@ export class EditorManager {
     private _desktopPath: string;
     private _cloudManager: CloudManager;
     public _currentMenu: electron.Menu;
+    private _configManager: ConfigManager;
 
     constructor(_app: electron.App, _currentWindow: electron.BrowserWindow, _editor: monaco.editor.IStandaloneCodeEditor) {
         this._editor = _editor;
@@ -23,6 +25,8 @@ export class EditorManager {
         this._currentWindow = _currentWindow;
         this._desktopPath = path.resolve(_app.getPath('desktop'));
         this._cloudManager = new CloudManager(this);
+        this._configManager = new ConfigManager(this);
+
     }
 
     public resetTemplate(): void {
@@ -58,6 +62,8 @@ export class EditorManager {
                                 if (err) throw err;
                                 _this._editor.setValue(data);
                                 _this._currentFilePath = path[0];
+                                _this._configManager.addValue('currentFile', _this._currentFilePath);
+                                _this._configManager.saveConfig();
                                 _this.updateWindowTitle();
                             });
                         }
