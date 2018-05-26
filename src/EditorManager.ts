@@ -195,14 +195,12 @@ export class EditorManager {
                 throw err;
             }
             //File saved :)
+            _this.updateWindowTitle();
         });
     }
 
     public updateWindowTitle(): void {
-        let path: string;
-        if (this._currentFilePath == null) {
-            path = "Novo Arquivo";
-        }
+        let path = this._currentFilePath == null ? "Novo Arquivo" : this._currentFilePath;
         if (this._cloudManager.isServer()) {
             this._currentWindow.setTitle("IDElectron - " + path + " - Sessão IDECloud (Servidor ["+this._cloudManager.getClientList().length+" clientes])");
         } else if (this._cloudManager.isClient()) {

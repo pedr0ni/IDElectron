@@ -1,8 +1,9 @@
 import * as electron from 'electron';
-import {remote} from 'electron';
-import socketIO = require('socket.io');
 import * as io from 'socket.io-client';
+import * as os from 'os';
+import {remote} from 'electron';
 import { EditorManager } from "./EditorManager";
+import socketIO = require('socket.io');
 
 export class CloudManager {
 
@@ -16,6 +17,8 @@ export class CloudManager {
     private _isserver: boolean;
     private _isclient: boolean;
     private _clientList: Array<socketIO.Socket>;
+
+    private _ipv4: string;
 
     constructor(_editorManager: EditorManager) {
         let app = require('express')();
@@ -38,6 +41,13 @@ export class CloudManager {
 
         this._isserver = false;
         this._isclient = false;
+
+        Object.keys(os.networkInterfaces()).forEach((entry) => {
+            os.networkInterfaces()[entry].forEach((iface) => {
+                if (iface.family != 'IPv4' || iface.internal) return;
+                console.log(iface.address);
+            });
+        });
     }
 
     public listen():void {
@@ -57,6 +67,13 @@ export class CloudManager {
                 change: event.changes[0].text
             });
         });
+
+        this._server.on('codeUpdate', (data: any) => {
+            this._editorManager.getMonaco().executeEdits("", [{
+                range: new monaco.Range(data.startLine, data.startCol, data.endLine, data.endCol),
+                text: data.change
+            }]);
+        });
     }
 
     public close(): void {
@@ -74,7 +91,7 @@ export class CloudManager {
 
     public connect():void {
         let _class: CloudManager = this;
-        this._client = io('http://localhost:4040');
+        this._client = io('http://192.168.15.10:4040');
 
         //Server connected
         this._client.on('connect', () => {
@@ -96,6 +113,16 @@ export class CloudManager {
                 range: new monaco.Range(data.startLine, data.startCol, data.endLine, data.endCol),
                 text: data.change
             }]);
+        });
+
+        this._editorManager.getMonaco().getModel().onDidChangeContent((event) => {
+            this._client.emit('clientUpdate', {
+                startLine: event.changes[0].range.startLineNumber,
+                endLine: event.changes[0].range.endLineNumber,
+                startCol: event.changes[0].range.startColumn,
+                endCol: event.changes[0].range.endColumn,
+                change: event.changes[0].text
+            });
         });
     }
 

@@ -1,14 +1,14 @@
 {
-  "name": "ElectronLyrics",
-  "version": "1.0.0",
-  "description": "A minimal Electron application written with Typescript",
+  "name": "IDElectron",
+  "version": "0.0.1",
+  "description": "Cross-platform real-time editing IDE",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
     "lint": "tslint -c tslint.json -p tsconfig.json",
     "start": "npm run build && electron ./dist/main.js"
   },
-  "repository": "https://github.com/electron/electron-quick-start-typescript",
+  "repository": "https://github.com/pedr0ni/IDElectron",
   "keywords": [
     "Electron",
     "quick",
