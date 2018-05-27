@@ -38,7 +38,7 @@ export class ConfigManager {
         });
     }
 
-    private getValue(key: string): string {
+    public getValue(key: string): string {
         return this._fileJSON[key];
     }
 

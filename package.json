@@ -1,5 +1,5 @@
 {
-  "name": "IDElectron",
+  "name": "idelectron",
   "version": "0.0.1",
   "description": "Cross-platform real-time editing IDE",
   "scripts": {
@@ -25,11 +25,14 @@
     "typescript": "^2.6.2"
   },
   "dependencies": {
+    "@types/jquery": "^3.3.2",
     "@types/socket.io": "^1.4.33",
     "@types/socket.io-client": "^1.4.32",
     "express": "^4.16.3",
+    "jquery": "^3.3.1",
     "monaco-editor": "^0.13.1",
     "socket.io": "^2.1.1",
-    "socket.io-client": "^2.1.1"
+    "socket.io-client": "^2.1.1",
+    "vex-js": "^4.1.0"
   }
 }

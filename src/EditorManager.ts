@@ -17,7 +17,7 @@ export class EditorManager {
     private _desktopPath: string;
     private _cloudManager: CloudManager;
     public _currentMenu: electron.Menu;
-    private _configManager: ConfigManager;
+    public _configManager: ConfigManager;
 
     constructor(_app: electron.App, _currentWindow: electron.BrowserWindow, _editor: monaco.editor.IStandaloneCodeEditor) {
         this._editor = _editor;
@@ -103,26 +103,13 @@ export class EditorManager {
                     {
                         label: 'Iniciar Sessão',
                         click() {
-                            if (_this._cloudManager.isClient()) {
-                                _this.showDialog('error', 'VOcê já é cliente de uma sessão. Saia para hostear uma sessão IDECloud.');
-                                return;
-                            }
-                            if (_this._cloudManager.isServer()) {
-                                _this.showDialog('error', 'Você já está em uma sessão da IDECloud.');
-                                return;
-                            }
-                            _this._cloudManager.listen();
+                            _this._cloudManager.createSession(_this._configManager.getValue('unique_id'));
                             _this.showDialog('info', 'Você iniciou uma sessão no IDECloud :)');
                         }
                     },
                     {
                         label: 'Encerrar Sessão',
                         click() {
-                            if (!_this._cloudManager.isServer()) {
-                                _this.showDialog('error', 'Você não iniciou uma sessão do IDECloud.');
-                                return;
-                            }
-                            _this._cloudManager.close();
                             _this.showDialog('warning', 'Sua sessão no IDECloud foi encerrada.');
                             _this.updateWindowTitle();
                         }
@@ -131,26 +118,13 @@ export class EditorManager {
                     {
                         label: 'Entrar na Sessão',
                         click() {
-                            if (_this._cloudManager.isServer()) {
-                                _this.showDialog('error', 'Você já é o host de uma sessão. Saia para entrar em outra sessão IDECloud.');
-                                return;
-                            }
-                            if (_this._cloudManager.isClient()) {
-                                _this.showDialog('error', 'Você já está em uma sessão IDECloud.');
-                                return;
-                            }
                             _this._cloudManager.connect();
                         }
                     },
                     {
                         label: 'Sair da Sessão',
                         click() {
-                            if (!_this._cloudManager.isClient()) {
-                                _this.showDialog('error', 'Você não está em nenhuma sessão IDECloud.');
-                                return;
-                            }
-                            _this._cloudManager.disconnect();
-
+                            
                         }
                     },
                     {type: 'separator'},
@@ -207,14 +181,7 @@ export class EditorManager {
 
     public updateWindowTitle(): void {
         let path = this._currentFilePath == null ? "Novo Arquivo" : this._currentFilePath;
-        if (this._cloudManager.isServer()) {
-            this._currentWindow.setTitle("IDElectron - " + path + " - Sessão IDECloud (Servidor ["+this._cloudManager.getClientList().length+" clientes])");
-        } else if (this._cloudManager.isClient()) {
-            this._currentWindow.setTitle("IDElectron - " + path + " - Sessão IDECloud (Cliente)");
-        } else {
-            this._currentWindow.setTitle("IDElectron - " + path);
-        }
-        
+        this._currentWindow.setTitle("IDElectron - " + path);
     }
 
     public showDialog(_type: string, _message: string):void {

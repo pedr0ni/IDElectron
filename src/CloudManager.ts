@@ -3,136 +3,95 @@ import * as io from 'socket.io-client';
 import * as os from 'os';
 import {remote} from 'electron';
 import { EditorManager } from "./EditorManager";
-import socketIO = require('socket.io');
+import * as $ from 'jquery';
 
 export class CloudManager {
 
-    private _server: socketIO.Server;
     private _client: any;
     private _editorManager: EditorManager;
-    private http: any;
-
     private _codeInterval: any;
-
-    private _isserver: boolean;
-    private _isclient: boolean;
-    private _clientList: Array<socketIO.Socket>;
-
-    private _ipv4: string;
+    private _vex: any;
+    private _idecloud: any;
 
     constructor(_editorManager: EditorManager) {
-        let app = require('express')();
-        this.http = require('http').Server(app);
-        this._clientList = [];
-        
-        this._server = socketIO(this.http);
         this._editorManager = _editorManager;
-
-        let _class = this;
-
-        this._server.on('connection', (client: socketIO.Socket) => {
-            _class._clientList.push(client);
-            client.on('disconnect', () => {
-                _class._clientList.splice(_class._clientList.indexOf(client), 1);
-                _class._editorManager.updateWindowTitle();
-            });
-            _class._editorManager.updateWindowTitle();
-        });
-
-        this._isserver = false;
-        this._isclient = false;
-
-        Object.keys(os.networkInterfaces()).forEach((entry) => {
-            os.networkInterfaces()[entry].forEach((iface) => {
-                if (iface.family != 'IPv4' || iface.internal) return;
-                console.log(iface.address);
-            });
+        this._vex = require('vex-js');
+        this._vex.registerPlugin(require('vex-dialog'));
+        this._vex.defaultOptions.className = 'vex-theme-os';
+        this._idecloud = io.connect('http://localhost:4040');
+        this._idecloud.on('connect', () => {
+            console.log("[INFO] Connected to IDECloud server.");
         });
     }
 
-    public listen():void {
-
-        this._server.listen(4040);
-        this._isserver = true;
-        this._editorManager.updateWindowTitle();
-
-        this._editorManager.getMonaco().getModel().onDidChangeContent((event) => {
-            
-            this._editorManager.getMonaco()
-            this._server.emit('codeUpdate', {
-                startLine: event.changes[0].range.startLineNumber,
-                endLine: event.changes[0].range.endLineNumber,
-                startCol: event.changes[0].range.startColumn,
-                endCol: event.changes[0].range.endColumn,
-                change: event.changes[0].text
-            });
+    public createSession(namespace: string) {
+        this._idecloud.emit('createNamespace', {
+            name: namespace
         });
 
-        this._server.on('codeUpdate', (data: any) => {
-            this._editorManager.getMonaco().executeEdits("", [{
-                range: new monaco.Range(data.startLine, data.startCol, data.endLine, data.endCol),
-                text: data.change
-            }]);
-        });
-    }
-
-    public close(): void {
-        this._server.close();
-        this._isserver = false;
-    }
-
-    public isServer(): boolean {
-        return this._isserver;
-    }
-
-    public isClient(): boolean {
-        return this._isclient;
+        setTimeout(() => {
+            this.startClient(this._editorManager._configManager.getValue('unique_id'));
+        }, 1000);
     }
 
     public connect():void {
         let _class: CloudManager = this;
-        this._client = io('http://192.168.15.10:4040');
+        this._vex.dialog.open({
+            message: 'Sessão IDECloud',
+            input: [
+                '<input name="uuid" type="text" placeholder="Código do parceiro IDECloud" required />'
+            ].join(''),
+            buttons: [
+                $.extend({}, this._vex.dialog.buttons.YES, { text: 'Conectar' }),
+                $.extend({}, this._vex.dialog.buttons.NO, { text: 'Cancelar' })
+            ],
+            callback: function (data: any) {
+                if (data) {
+                    _class.startClient(data.uuid);
+                }
+            }
+        });
+    }
+
+    public startClient(uuid: string): void {
+        console.log("[INFO] Starting client at " + uuid);
+        this._client = io('http://localhost:4040/' + uuid);
 
         //Server connected
         this._client.on('connect', () => {
-            _class._editorManager.showDialog('info', 'Você se conectou em uma sessão IDECloud.');
-            _class._isclient = true;
-            _class._editorManager.updateWindowTitle();
+            this._editorManager.showDialog('info', 'Você se conectou em uma sessão IDECloud.');
+            this._editorManager.updateWindowTitle();
         });
 
         //Server disconnected
         this._client.on('disconnect', () => {
-            _class._editorManager.showDialog('error', 'A sua sessão do IDECloud foi encerrada.');
-            _class._isclient = false;
-            _class._editorManager.updateWindowTitle();
-        })
+            this._editorManager.showDialog('error', 'A sua sessão do IDECloud foi encerrada.');
+            this._editorManager.updateWindowTitle();
+        });
+
+        this._client.on('connect_failed', function() {
+            this._editorManager.showDialog('error', 'Erro ao conectar-se a sessão IDECloud.');
+            this._editorManager.updateWindowTitle();
+        });
         
         //Code update received 
-        this._client.on('codeUpdate', (data: any) => {
+        this._client.on('serverCodeUpdate', (data: any) => {
+            if (data.from == this._client.id)  return;
             this._editorManager.getMonaco().executeEdits("", [{
                 range: new monaco.Range(data.startLine, data.startCol, data.endLine, data.endCol),
                 text: data.change
             }]);
         });
-
-        this._editorManager.getMonaco().getModel().onDidChangeContent((event) => {
-            this._client.emit('clientUpdate', {
+        this._editorManager.getMonaco().getModel().onDidChangeContent((event: any) => {
+            this._client.emit('clientCodeUpdate', {
                 startLine: event.changes[0].range.startLineNumber,
                 endLine: event.changes[0].range.endLineNumber,
                 startCol: event.changes[0].range.startColumn,
                 endCol: event.changes[0].range.endColumn,
-                change: event.changes[0].text
+                change: event.changes[0].text,
+                namespace: uuid
             });
         });
-    }
-
-    public disconnect(): void {
-        this._client.disconnect();
-        this._isclient = false;
-    }
-
-    public getClientList():Array<socketIO.Socket> {
-        return this._clientList;
     }
 
 }
